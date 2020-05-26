@@ -76,6 +76,9 @@
 
 extern crate alloc;
 
+#[cfg(all(feature = "std", not(feature = "mesalock_sgx")))]
+extern crate std;
+
 #[cfg(all(feature = "mesalock_sgx", target_env = "sgx"))]
 extern crate std;
 
@@ -103,13 +106,13 @@ mod serde;
 #[inline(never)]
 #[cold]
 fn abort() -> ! {
-    //#[cfg(feature = "std")]
-    //{
-    //    std::process::abort();
-    //}
+    #[cfg(all(feature = "std", not(feature = "mesalock_sgx")))]
+    {
+        std::process::abort();
+    }
 
-    //#[cfg(not(feature = "std"))]
-    //{
+    #[cfg(any(not(feature = "std"),feature = "mesalock_sgx"))]
+    {
         struct Abort;
         impl Drop for Abort {
             fn drop(&mut self) {
@@ -118,5 +121,5 @@ fn abort() -> ! {
         }
         let _a = Abort;
         panic!("abort in bytes");
-    //}
+    }
 }
